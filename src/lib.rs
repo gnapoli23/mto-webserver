@@ -1,13 +1,17 @@
+pub mod api;
 pub mod config;
 pub mod db;
-use std::error::Error;
+use std::{collections::HashMap, error::Error};
 
-use actix_web::{get, web, App, HttpServer, Responder, HttpResponse};
+use actix_web::{get, web, App, HttpResponse, HttpServer, Responder};
 use env_logger::Env;
 use log::info;
+use rand::Rng;
+use reqwest::Body;
 use sea_orm::{DatabaseConnection, EntityTrait};
+use serde::{Deserialize, Serialize};
 
-pub async fn run() -> std::io::Result<()> {
+pub async fn main() -> std::io::Result<()> {
     // Init logger
     env_logger::init_from_env(Env::default().default_filter_or("info"));
 
@@ -17,20 +21,40 @@ pub async fn run() -> std::io::Result<()> {
     let state = web::Data::new(conn);
 
     // Init server
-    let server = HttpServer::new(move || App::new().app_data(state.clone()).service(greet).service(run_httpbin))
-        .disable_signals()
-        .bind(("localhost", 8080))?;
+    let server = HttpServer::new(move || {
+        App::new()
+            .app_data(state.clone())
+            .service(web::scope("/api").configure(api::httpbin_request::service_config))
+            .service(run)
+    })
+    .disable_signals()
+    .bind(("localhost", 8080))?;
     info!("Starting server");
     server.run().await
 }
 
-#[get("/hello/{name}")]
-async fn greet(name: web::Path<String>) -> impl Responder {
-    format!("Hello {}!", name)
+#[derive(Serialize, Deserialize, Debug, Clone)]
+struct HttpBinRequest {
+    pub value: u8,
 }
 
 #[get("/run")]
-async fn run_httpbin(data: web::Data<DatabaseConnection>) -> Result<HttpResponse, Box<dyn Error>> {
-    let res = db::User::find().all(data.get_ref()).await?;
+async fn run(data: web::Data<DatabaseConnection>) -> Result<HttpResponse, Box<dyn Error>> {
+
+    // Send 30 POST requests to https://httpbin.org/post
+    // Generate random number in range [0,10]
+    let mut rng = rand::thread_rng();
+    let value = rng.gen_range::<u8, _>(0..11);
+    info!("Generated random value: {value}");
+
+    let payload = HttpBinRequest { value };
+    let client = reqwest::Client::new();
+    let res = client
+        .post("https://httpbin.org/post")
+        .json(&payload)
+        .send()
+        .await?
+        .json::<serde_json::Value>()
+        .await?;
     Ok(HttpResponse::Ok().json(res))
 }
