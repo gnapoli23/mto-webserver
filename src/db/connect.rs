@@ -15,10 +15,11 @@ pub async fn connect(db_config: &DbConfig) -> Result<DatabaseConnection, DbErr> 
     conn_opts
         .min_connections(db_config.min_connections)
         .max_connections(db_config.max_connections)
-        .connect_timeout(Duration::from_secs(db_config.conn_timeout))
-        .sqlx_logging(true);
+        .connect_timeout(Duration::from_secs(db_config.conn_timeout));
+    //.sqlx_logging(true);
     //.sqlx_logging_level(log::LevelFilter::Info);
 
+    // Under the hood, a sqlx::Pool is created and owned by DatabaseConnection
     Database::connect(conn_opts).await
 }
 
@@ -32,6 +33,6 @@ mod connect_tests {
     async fn check_connection() {
         let config = config::get().await;
         let conn = connect(&config.db).await.unwrap();
-        conn.ping().await.unwrap()
+        assert!(conn.ping().await.is_ok())
     }
 }

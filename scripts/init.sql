@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS `httpbin_request` (
   `id` int(9) unsigned NOT NULL AUTO_INCREMENT,
   `batch_id` int(9) unsigned NOT NULL,
   `value` varchar(255) NOT NULL,
-  `status` enum('SUCCESS','ERROR') DEFAULT NULL,
+  `status` varchar(100) DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci;
 

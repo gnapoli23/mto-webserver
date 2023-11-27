@@ -26,8 +26,12 @@ static CONFIG: OnceCell<Config> = OnceCell::const_new();
 pub async fn get() -> &'static Config {
     CONFIG
         .get_or_try_init(|| async {
-            let data = tokio::fs::read("./config.yaml").await.expect("Unable to read config file");
-            Ok::<Config, Box<dyn Error>>(serde_yaml::from_slice::<Config>(&data).expect("Unable to deserialize config file"))
+            let data = tokio::fs::read("./config.yaml")
+                .await
+                .expect("Unable to read config file");
+            Ok::<Config, Box<dyn Error>>(
+                serde_yaml::from_slice::<Config>(&data).expect("Unable to deserialize config file"),
+            )
         })
         .await
         .unwrap()
