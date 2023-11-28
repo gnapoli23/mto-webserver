@@ -1,7 +1,8 @@
 pub mod api;
 pub mod config;
 pub mod db;
-use std::{collections::HashMap, error::Error, f32::consts::E, process::Output};
+pub mod service;
+use std::{collections::HashMap, env, error::Error, f32::consts::E, process::Output};
 
 use actix_web::{get, web, App, HttpResponse, HttpServer, Responder};
 use env_logger::Env;
