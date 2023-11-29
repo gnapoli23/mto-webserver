@@ -28,7 +28,7 @@ pub async fn update_request(db: web::Data<DatabaseConnection>) -> Result<HttpRes
 }
 
 #[delete("/{id}")]
-pub async fn delete_request(db: web::Data<DatabaseConnection>) -> Result<HttpResponse, Error> {
-    let data = crud::request::delete_request(&db).await.unwrap();
-    Ok(HttpResponse::Ok().json(&data))
+pub async fn delete_request(db: web::Data<DatabaseConnection>, id: web::Path<i32>) -> Result<HttpResponse, Error> {
+    crud::request::delete_request(&db, *id).await.unwrap();
+    Ok(HttpResponse::Ok().json(format!("Request with id {id} successfully deleted")))
 }

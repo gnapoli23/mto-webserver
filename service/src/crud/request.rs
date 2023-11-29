@@ -20,6 +20,7 @@ pub async fn update_request(conn: &DatabaseConnection) -> Result<RequestModel, D
 }
 
 // TODO: change here with DbError
-pub async fn delete_request(conn: &DatabaseConnection) -> Result<RequestModel, DbErr> {
-    todo!()
+pub async fn delete_request(conn: &DatabaseConnection, id: i32) -> Result<(), DbErr> {
+    let _ = Request::delete_by_id(id).exec(conn).await?;
+    Ok(())
 }
