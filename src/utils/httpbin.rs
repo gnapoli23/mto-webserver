@@ -66,6 +66,8 @@ pub fn find_mto_numbers(values: Vec<u8>) -> Vec<u8> {
 
 #[cfg(test)]
 mod httpbin_tests {
+    use crate::utils::httpbin::find_mto_numbers;
+
     use super::{HttpBinPayload, HttpBinResponse};
     use reqwest::Client;
 
@@ -86,5 +88,16 @@ mod httpbin_tests {
             .unwrap()
             .unwrap();
         assert_eq!(res.value, 1)
+    }
+
+    #[test]
+    fn test_mto() {
+        let values = vec![3, 2, 5, 1, 5, 7, 2, 1];
+        let expected = vec![1, 2, 5];
+        assert_eq!(find_mto_numbers(values), expected);
+
+        let values = vec![5, 7, 7];
+        let expected = vec![7];
+        assert_eq!(find_mto_numbers(values), expected);
     }
 }

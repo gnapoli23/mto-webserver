@@ -1,4 +1,6 @@
-pub async fn add_request() {
+use sea_orm::DatabaseConnection;
+
+pub async fn add_request(conn: &DatabaseConnection) {
     todo!()
 }
 
