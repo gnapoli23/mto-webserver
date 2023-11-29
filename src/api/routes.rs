@@ -1,7 +1,7 @@
 use std::error::Error;
 
 use crate::{
-    api::httpbin_request,
+    api::request,
     utils::httpbin::{find_mto_numbers, send_request, HttpBinPayload},
 };
 use actix_web::{get, web, HttpResponse};
@@ -11,7 +11,8 @@ use rand::{distributions::Uniform, Rng};
 use sea_orm::DatabaseConnection;
 
 pub fn config(cfg: &mut web::ServiceConfig) {
-    cfg.service(web::scope("/httpbin_request").configure(httpbin_request::config))
+    cfg
+        .service(web::scope("/request").configure(request::config))
         .service(run);
 }
 

@@ -1,49 +1,42 @@
-use std::error::Error;
-
+use config::ConfigError;
 use serde::Deserialize;
 use tokio::sync::OnceCell;
 
 #[derive(Deserialize)]
 pub struct Config {
-    #[serde(alias = "database")]
-    pub db: DbConfig,
+    pub database_url: String,
+    pub database_min_conns: u32,
+    pub database_max_conns: u32,
+    pub database_conn_timeout: u64,
+    pub server_host: String,
+    pub server_port: u16,
 }
 
-#[derive(Deserialize)]
-pub struct DbConfig {
-    pub protocol: String,
-    pub username: String,
-    pub password: String,
-    pub host: String,
-    pub schema: String,
-    pub min_connections: u32,
-    pub max_connections: u32,
-    pub conn_timeout: u64,
+impl Config {
+    fn from_env() -> Result<Self, ConfigError> {
+        ::config::Config::builder()
+            .add_source(::config::Environment::default())
+            .build()?
+            .try_deserialize::<Config>()
+    }
 }
 
 static CONFIG: OnceCell<Config> = OnceCell::const_new();
 
-pub async fn get() -> &'static Config {
+pub async fn get() -> Result<&'static Config, ConfigError> {
     CONFIG
-        .get_or_try_init(|| async {
-            let data = tokio::fs::read("./config.yaml")
-                .await
-                .expect("Unable to read config file");
-            Ok::<Config, Box<dyn Error>>(
-                serde_yaml::from_slice::<Config>(&data).expect("Unable to deserialize config file"),
-            )
-        })
+        .get_or_try_init(|| async { Config::from_env() })
         .await
-        .unwrap()
 }
 
 #[cfg(test)]
 mod config_tests {
-    use super::get;
 
     #[tokio::test]
     async fn test_load_conf() {
-        let conf = get().await;
-        assert_eq!(conf.db.protocol, "mysql");
+        dotenv::dotenv().unwrap();
+        let conf = super::get().await.unwrap();
+        assert_eq!(conf.database_min_conns, 1);
+        assert_eq!(conf.database_max_conns, 100);
     }
 }

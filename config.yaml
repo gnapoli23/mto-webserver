@@ -1,9 +1,0 @@
-database:
-  protocol: mysql
-  username: root
-  password: root
-  host: localhost
-  schema: mto_db
-  min_connections: 1
-  max_connections: 100
-  conn_timeout: 10

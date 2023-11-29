@@ -4,16 +4,20 @@ pub mod db;
 pub mod utils;
 
 use actix_web::{web, App, HttpServer};
+use dotenv::dotenv;
 use env_logger::Env;
 use log::info;
 
 pub async fn main() -> std::io::Result<()> {
+    // Load .env file and init configuration
+    dotenv().ok();
+    let config = config::get().await.unwrap();
+
     // Init logger
     env_logger::init_from_env(Env::default().default_filter_or("info"));
 
     // Init DB
-    let config = config::get().await;
-    let conn = db::connect(&config.db).await.unwrap(); // TODO: handle error
+    let conn = db::connect(config).await.unwrap(); // TODO: handle error
     let state = web::Data::new(conn);
 
     // Init server
@@ -23,7 +27,7 @@ pub async fn main() -> std::io::Result<()> {
             .configure(api::routes::config)
     })
     .disable_signals()
-    .bind(("localhost", 8080))?;
+    .bind((config.server_host.as_ref(), config.server_port))?;
     info!("Starting server");
     server.run().await
 }
