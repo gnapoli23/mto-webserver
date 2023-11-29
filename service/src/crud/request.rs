@@ -1,12 +1,10 @@
 use mto_entity::prelude::*;
-use sea_orm::{DatabaseConnection, DbErr, EntityTrait};
+use sea_orm::{ActiveModelTrait, DatabaseConnection, DbErr, DeleteResult, EntityTrait};
 
-// TODO: change here with DbError
 pub async fn add_request(conn: &DatabaseConnection) -> Result<RequestModel, DbErr> {
     todo!()
 }
 
-// TODO: change here with DbError
 pub async fn get_request(
     conn: &DatabaseConnection,
     id: i32,
@@ -14,13 +12,17 @@ pub async fn get_request(
     Request::find_by_id(id).one(conn).await
 }
 
-// TODO: change here with DbError
 pub async fn update_request(conn: &DatabaseConnection) -> Result<RequestModel, DbErr> {
     todo!()
 }
 
-// TODO: change here with DbError
-pub async fn delete_request(conn: &DatabaseConnection, id: i32) -> Result<(), DbErr> {
-    let _ = Request::delete_by_id(id).exec(conn).await?;
-    Ok(())
+pub async fn delete_request(conn: &DatabaseConnection, id: i32) -> Result<DeleteResult, DbErr> {
+    let request: RequestActiveModel = Request::find_by_id(id)
+        .one(conn)
+        .await?
+        .ok_or(DbErr::Custom(format!(
+            "Request with id {id} does not exist."
+        )))
+        .map(Into::into)?;
+    request.delete(conn).await
 }

@@ -11,8 +11,7 @@ use rand::{distributions::Uniform, Rng};
 use sea_orm::DatabaseConnection;
 
 pub fn config(cfg: &mut web::ServiceConfig) {
-    cfg
-        .service(web::scope("/request").configure(request::config))
+    cfg.service(web::scope("/request").configure(request::config))
         .service(run);
 }
 
