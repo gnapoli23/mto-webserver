@@ -1,9 +1,9 @@
 mod controller;
-mod service;
+mod crud;
 
 use actix_web::web;
 
-pub fn service_config(cfg: &mut web::ServiceConfig) {
+pub fn config(cfg: &mut web::ServiceConfig) {
     cfg.service(
         web::scope("/httpbin_request")
             .service(controller::add_request)

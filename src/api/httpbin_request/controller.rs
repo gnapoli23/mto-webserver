@@ -1,5 +1,4 @@
 use actix_web::{delete, get, post, put, Error, HttpResponse};
-use sea_orm::DatabaseConnection;
 
 #[post("/")]
 pub async fn add_request() -> Result<HttpResponse, Error> {
