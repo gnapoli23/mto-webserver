@@ -1,8 +1,8 @@
 use std::error::Error;
 
 use crate::{
-    api::{request, ApiResponse},
-    utils::httpbin::{find_mto_numbers, send_request, HttpBinPayload},
+    api::{request::{self, HttpBinPayload}, ApiResponse},
+    utils::find_mto_numbers,
 };
 use actix_web::{get, web, HttpResponse};
 use futures_util::{stream::FuturesUnordered, StreamExt};
@@ -29,7 +29,7 @@ async fn run(conn: web::Data<DatabaseConnection>) -> Result<HttpResponse, Box<dy
     let client = reqwest::Client::new();
     let futs = value_requests
         .iter()
-        .map(|req| send_request(&client, req, &conn))
+        .map(|req| request::send_request(&client, req, &conn))
         .collect::<FuturesUnordered<_>>();
 
     let res: Vec<u8> = futs

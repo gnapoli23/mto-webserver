@@ -1,9 +1,11 @@
+use log::error;
 use mto_entity::prelude::*;
+use reqwest::Client;
 use sea_orm::{ActiveModelTrait, ActiveValue::Set, DatabaseConnection, DeleteResult, EntityTrait};
 
 use crate::error::ServerError;
 
-use super::dto::RequestDto;
+use super::{dto::RequestDto, HttpBinPayload, HttpBinResponse};
 
 pub async fn add_request(
     conn: &DatabaseConnection,
@@ -55,6 +57,45 @@ pub async fn delete_request(
         .ok_or(ServerError::NotFound)
         .map(Into::into)?;
     request.delete(conn).await.map_err(ServerError::DbError)
+}
+
+pub async fn send_request(
+    client: &Client,
+    req: &HttpBinPayload,
+    conn: &DatabaseConnection,
+) -> Option<u8> {
+    let fut = client.post("https://httpbin.org/post").json(req).send();
+    let resp = match fut.await {
+        Ok(res) => match res.json::<HttpBinResponse>().await {
+            Ok(json_res) => {
+                if let Ok(data) = serde_json::from_str::<HttpBinPayload>(&json_res.data) {
+                    Some(data.value)
+                } else {
+                    error!("Unable to deserialize response");
+                    None
+                }
+            }
+            Err(e) => {
+                error!("Unable to deserialize response into JSON: {e}");
+                None
+            }
+        },
+        Err(e) => {
+            error!("Unable to send request: {e}");
+            None
+        }
+    };
+    
+    // Save request on DB
+    let request = RequestActiveModel {
+        value: Set(req.value.into()),
+        ..Default::default()
+    };
+    if let Err(e) = request.insert(conn).await {
+        error!("Unable to save data into database: {e}");
+    }
+
+    resp
 }
 
 #[cfg(test)]
@@ -167,5 +208,24 @@ mod service_tests {
         assert_eq!(resp.rows_affected, 1);
 
         Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_serde() {
+        // Send a simple request and deserialize the `data` field from the response
+        let client = Client::new();
+        let req = HttpBinPayload::new(1);
+        let res = client
+            .post("https://httpbin.org/post")
+            .json(&req)
+            .send()
+            .await
+            .unwrap()
+            .json::<HttpBinResponse>()
+            .await
+            .map(|resp| serde_json::from_str::<HttpBinPayload>(&resp.data))
+            .unwrap()
+            .unwrap();
+        assert_eq!(res.value, 1)
     }
 }
