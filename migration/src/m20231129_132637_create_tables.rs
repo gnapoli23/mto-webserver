@@ -19,9 +19,7 @@ impl MigrationTrait for Migration {
                             .auto_increment()
                             .primary_key(),
                     )
-                    .col(ColumnDef::new(Request::BatchId).integer())
                     .col(ColumnDef::new(Request::Value).integer().not_null())
-                    .col(ColumnDef::new(Request::Status).string())
                     .to_owned(),
             )
             .await?;
@@ -85,7 +83,5 @@ enum User {
 enum Request {
     Table,
     Id,
-    BatchId,
     Value,
-    Status,
 }

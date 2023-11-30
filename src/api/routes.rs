@@ -15,7 +15,7 @@ pub fn config(cfg: &mut web::ServiceConfig) {
 }
 
 #[get("/run")]
-async fn run(_data: web::Data<DatabaseConnection>) -> Result<HttpResponse, Box<dyn Error>> {
+async fn run(conn: web::Data<DatabaseConnection>) -> Result<HttpResponse, Box<dyn Error>> {
     // Send 30 POST requests to https://httpbin.org/post
     // Generate random number in range [0,10]
     let range = Uniform::<u8>::from(0..11);
@@ -29,7 +29,7 @@ async fn run(_data: web::Data<DatabaseConnection>) -> Result<HttpResponse, Box<d
     let client = reqwest::Client::new();
     let futs = value_requests
         .iter()
-        .map(|req| send_request(&client, req))
+        .map(|req| send_request(&client, req, &conn))
         .collect::<FuturesUnordered<_>>();
 
     let res: Vec<u8> = futs

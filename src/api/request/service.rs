@@ -12,9 +12,7 @@ pub async fn add_request(
     // Add request
     let new_request = RequestActiveModel {
         id: Set(data.id),
-        batch_id: Set(None),
         value: Set(data.value),
-        status: Set(None),
     };
     new_request.insert(conn).await.map_err(ServerError::DbError)
 }
@@ -73,15 +71,11 @@ mod service_tests {
             .append_query_results([
                 [RequestModel {
                     id: 123,
-                    batch_id: None,
                     value: 123,
-                    status: None,
                 }],
                 [RequestModel {
                     id: 321,
-                    batch_id: None,
                     value: 111,
-                    status: None,
                 }],
             ])
             .append_exec_results([
@@ -112,8 +106,6 @@ mod service_tests {
             RequestModel {
                 id: 123,
                 value: 123,
-                batch_id: None,
-                status: None
             }
         );
 
@@ -133,8 +125,6 @@ mod service_tests {
             RequestModel {
                 id: 123,
                 value: 123,
-                batch_id: None,
-                status: None
             }
         );
 
@@ -156,8 +146,6 @@ mod service_tests {
             RequestModel {
                 id: 321,
                 value: 111,
-                batch_id: None,
-                status: None
             }
         );
 

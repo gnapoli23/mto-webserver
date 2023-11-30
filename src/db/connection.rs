@@ -22,6 +22,7 @@ mod connect_tests {
 
     #[tokio::test]
     async fn check_connection() {
+        dotenv::dotenv().unwrap();
         let config = config::get().await.unwrap();
         let conn = connect(config).await.unwrap();
         assert!(conn.ping().await.is_ok())

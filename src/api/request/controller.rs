@@ -44,3 +44,45 @@ pub async fn delete_request(
     let _ = service::delete_request(&db, *id).await?;
     Ok(HttpResponse::Ok().finish())
 }
+
+
+#[cfg(test)]
+mod controller_tests {
+    use sea_orm::{DatabaseConnection, MockExecResult, DatabaseBackend, MockDatabase};
+    use mto_entity::prelude::*;
+
+    fn setup_db() -> DatabaseConnection {
+        MockDatabase::new(DatabaseBackend::MySql)
+            .append_query_results([
+                [RequestModel {
+                    id: 123,
+                    value: 123,
+                }],
+                [RequestModel {
+                    id: 321,
+                    value: 111,
+                }],
+            ])
+            .append_exec_results([
+                MockExecResult {
+                    last_insert_id: 123,
+                    rows_affected: 1,
+                },
+                MockExecResult {
+                    last_insert_id: 321,
+                    rows_affected: 1,
+                },
+            ])
+            .into_connection()
+    }
+
+    fn setup_app() {
+
+    }
+
+
+    #[tokio::test]
+    async fn test_request_post() {
+        //let app = actix_web::test::init_service(app)
+    }
+}
