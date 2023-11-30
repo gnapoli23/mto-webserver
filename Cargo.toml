@@ -11,7 +11,7 @@ members = [".", "migration", "entity"]
 mto-entity = { path = "./entity"}
 tokio = { version = "1.34.0", features = ["sync", "rt-multi-thread", "macros"]}
 actix-web = "4.4.0"
-sea-orm = { version = "0.12.7", features = [ "sqlx-mysql", "runtime-tokio-native-tls"] }
+sea-orm = { version = "0.12.7", features = [ "sqlx-mysql", "runtime-tokio-native-tls", "mock"] }
 log = "0.4.20"
 env_logger = "0.10.1"
 serde = { version = "1.0.193", features = ["derive"] }

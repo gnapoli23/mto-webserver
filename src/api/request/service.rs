@@ -58,3 +58,125 @@ pub async fn delete_request(
         .map(Into::into)?;
     request.delete(conn).await.map_err(ServerError::DbError)
 }
+
+#[cfg(test)]
+mod service_tests {
+    use sea_orm::MockExecResult;
+    use super::*;
+
+    use sea_orm::{DatabaseBackend, MockDatabase};
+
+    use crate::api::request::dto::RequestDto;
+
+    fn setup_db() -> DatabaseConnection {
+        MockDatabase::new(DatabaseBackend::MySql)
+            .append_query_results([
+                [RequestModel {
+                    id: 123,
+                    batch_id: None,
+                    value: 123,
+                    status: None,
+                }],
+                [RequestModel {
+                    id: 321,
+                    batch_id: None,
+                    value: 111,
+                    status: None,
+                }],
+            ])
+            .append_exec_results([
+                MockExecResult {
+                    last_insert_id: 123,
+                    rows_affected: 1,
+                },
+                MockExecResult {
+                    last_insert_id: 321,
+                    rows_affected: 1,
+                },
+            ])
+            .into_connection()
+    }
+
+
+    #[tokio::test]
+    pub async fn test_add_request() -> Result<(), ServerError> {
+        // Create MockDatabase
+        let db = setup_db();
+
+        // Call service
+        let request_dto = RequestDto { id: 123, value: 123 };
+        let resp = add_request(&db, request_dto).await?;
+        
+        assert_eq!(
+            resp,
+            RequestModel {
+                id: 123,
+                value: 123,
+                batch_id: None,
+                status: None
+            }
+        );
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_get_request() -> Result<(), ServerError> {
+        // Create MockDatabase
+        let db = setup_db();
+
+        // Call service
+        let resp = get_request(&db, 123).await?;
+        
+        assert_eq!(
+            resp,
+            RequestModel {
+                id: 123,
+                value: 123,
+                batch_id: None,
+                status: None
+            }
+        );
+
+        Ok(())
+    }
+
+
+    #[tokio::test]
+    async fn test_update_request() -> Result<(), ServerError> {
+        // Create MockDatabase
+        let db = setup_db();
+
+        // Call service
+        let request_dto = RequestDto { id: 321, value: 111 };
+        let resp = update_request(&db, request_dto).await?;
+        
+        assert_eq!(
+            resp,
+            RequestModel {
+                id: 321,
+                value: 111,
+                batch_id: None,
+                status: None
+            }
+        );
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_delete_request() -> Result<(), ServerError> {
+        // Create MockDatabase
+        let db = setup_db();
+
+        // Call service
+        let resp = delete_request(&db, 321).await?;
+        
+        assert_eq!(
+            resp.rows_affected,
+            1
+        );
+
+        Ok(())
+    }
+}
