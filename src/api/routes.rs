@@ -1,12 +1,11 @@
 use std::error::Error;
 
 use crate::{
-    api::request,
+    api::{request, ApiResponse},
     utils::httpbin::{find_mto_numbers, send_request, HttpBinPayload},
 };
 use actix_web::{get, web, HttpResponse};
 use futures_util::{stream::FuturesUnordered, StreamExt};
-use log::info;
 use rand::{distributions::Uniform, Rng};
 use sea_orm::DatabaseConnection;
 
@@ -15,7 +14,6 @@ pub fn config(cfg: &mut web::ServiceConfig) {
         .service(run);
 }
 
-// Add here the /run endpoint
 #[get("/run")]
 async fn run(_data: web::Data<DatabaseConnection>) -> Result<HttpResponse, Box<dyn Error>> {
     // Send 30 POST requests to https://httpbin.org/post
@@ -26,10 +24,8 @@ async fn run(_data: web::Data<DatabaseConnection>) -> Result<HttpResponse, Box<d
         .take(30)
         .map(HttpBinPayload::new)
         .collect::<Vec<HttpBinPayload>>();
-    //info!("Generated random values: {value_requests:?}");
-    //let futs = value_requests.into_iter()
 
-    // Genero le future delle richieste con un iteratore
+    // Create a future for each value, to run the requests concurrently
     let client = reqwest::Client::new();
     let futs = value_requests
         .iter()
@@ -43,8 +39,9 @@ async fn run(_data: web::Data<DatabaseConnection>) -> Result<HttpResponse, Box<d
         .flatten()
         .collect();
 
-    info!("Res values: {res:?}");
+    // Find values that appear more than once
     let mto = find_mto_numbers(res);
-    info!("Mto values: {mto:?}");
-    Ok(HttpResponse::Ok().json(mto))
+    let res = ApiResponse::new(Some(mto));
+
+    Ok(HttpResponse::Ok().json(res))
 }

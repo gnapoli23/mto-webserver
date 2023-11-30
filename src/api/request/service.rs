@@ -1,7 +1,5 @@
 use mto_entity::prelude::*;
-use sea_orm::{
-    ActiveModelTrait, ActiveValue::Set, DatabaseConnection, DeleteResult, EntityTrait,
-};
+use sea_orm::{ActiveModelTrait, ActiveValue::Set, DatabaseConnection, DeleteResult, EntityTrait};
 
 use crate::error::ServerError;
 
@@ -21,12 +19,13 @@ pub async fn add_request(
     new_request.insert(conn).await.map_err(ServerError::DbError)
 }
 
-pub async fn get_request(
-    conn: &DatabaseConnection,
-    id: i32,
-) -> Result<RequestModel, ServerError> {
+pub async fn get_request(conn: &DatabaseConnection, id: i32) -> Result<RequestModel, ServerError> {
     // Find request
-    Request::find_by_id(id).one(conn).await.map_err(ServerError::DbError)?.ok_or(ServerError::NotFound)
+    Request::find_by_id(id)
+        .one(conn)
+        .await
+        .map_err(ServerError::DbError)?
+        .ok_or(ServerError::NotFound)
 }
 
 pub async fn update_request(
@@ -47,7 +46,10 @@ pub async fn update_request(
     Ok(data)
 }
 
-pub async fn delete_request(conn: &DatabaseConnection, id: i32) -> Result<DeleteResult, ServerError> {
+pub async fn delete_request(
+    conn: &DatabaseConnection,
+    id: i32,
+) -> Result<DeleteResult, ServerError> {
     let request: RequestActiveModel = Request::find_by_id(id)
         .one(conn)
         .await
