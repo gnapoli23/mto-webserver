@@ -45,15 +45,19 @@ pub async fn delete_request(
     Ok(HttpResponse::Ok().finish())
 }
 
-
 #[cfg(test)]
 mod controller_tests {
-    use actix_web::{web, App, dev::{Service, ServiceResponse}, http::Error};
-    use reqwest::StatusCode;
-    use sea_orm::{DatabaseConnection, MockExecResult, DatabaseBackend, MockDatabase};
+    use actix_web::{web, App};
     use mto_entity::prelude::*;
+    use sea_orm::{DatabaseBackend, DatabaseConnection, MockDatabase, MockExecResult};
 
-    use crate::api::{self, request::{dto::RequestDto, controller::{add_request, get_request, update_request, delete_request}}, ApiResponse};
+    use crate::api::{
+        request::{
+            controller::{add_request, delete_request, get_request, update_request},
+            dto::RequestDto,
+        },
+        ApiResponse,
+    };
 
     fn setup_db() -> DatabaseConnection {
         MockDatabase::new(DatabaseBackend::MySql)
@@ -80,7 +84,6 @@ mod controller_tests {
             .into_connection()
     }
 
-
     #[tokio::test]
     async fn test_request_post() {
         // Setup mock DB
@@ -88,14 +91,21 @@ mod controller_tests {
 
         // Setup api
         let state = web::Data::new(db);
-        let app = actix_web::test::init_service(App::new()
-            .app_data(state.clone())
-            .service(add_request)).await;
+        let app =
+            actix_web::test::init_service(App::new().app_data(state.clone()).service(add_request))
+                .await;
 
-        let data = RequestDto { id: 123, value: 123 };
-        let req = actix_web::test::TestRequest::post().uri("/").set_json(data).to_request();
-        let resp: ApiResponse<RequestModel> = actix_web::test::call_and_read_body_json(&app, req).await;
-        
+        let data = RequestDto {
+            id: 123,
+            value: 123,
+        };
+        let req = actix_web::test::TestRequest::post()
+            .uri("/")
+            .set_json(data)
+            .to_request();
+        let resp: ApiResponse<RequestModel> =
+            actix_web::test::call_and_read_body_json(&app, req).await;
+
         assert_eq!(resp.clone().data.unwrap().id, 123);
         assert_eq!(resp.data.unwrap().value, 123);
     }
@@ -107,13 +117,14 @@ mod controller_tests {
 
         // Setup api
         let state = web::Data::new(db);
-        let app = actix_web::test::init_service(App::new()
-            .app_data(state.clone())
-            .service(get_request)).await;
+        let app =
+            actix_web::test::init_service(App::new().app_data(state.clone()).service(get_request))
+                .await;
 
         let req = actix_web::test::TestRequest::get().uri("/123").to_request();
-        let resp: ApiResponse<RequestModel> = actix_web::test::call_and_read_body_json(&app, req).await;
-        
+        let resp: ApiResponse<RequestModel> =
+            actix_web::test::call_and_read_body_json(&app, req).await;
+
         assert_eq!(resp.clone().data.unwrap().id, 123);
         assert_eq!(resp.data.unwrap().value, 123);
     }
@@ -125,14 +136,22 @@ mod controller_tests {
 
         // Setup api
         let state = web::Data::new(db);
-        let app = actix_web::test::init_service(App::new()
-            .app_data(state.clone())
-            .service(update_request)).await;
+        let app = actix_web::test::init_service(
+            App::new().app_data(state.clone()).service(update_request),
+        )
+        .await;
 
-        let data = RequestDto { id: 321, value: 111 };
-        let req = actix_web::test::TestRequest::put().uri("/321").set_json(data).to_request();
+        let data = RequestDto {
+            id: 321,
+            value: 111,
+        };
+        let req = actix_web::test::TestRequest::put()
+            .uri("/321")
+            .set_json(data)
+            .to_request();
 
-        let resp: ApiResponse<RequestModel> = actix_web::test::call_and_read_body_json(&app, req).await;
+        let resp: ApiResponse<RequestModel> =
+            actix_web::test::call_and_read_body_json(&app, req).await;
         assert_eq!(resp.clone().data.unwrap().id, 321);
         assert_eq!(resp.data.unwrap().value, 111);
     }
@@ -144,14 +163,17 @@ mod controller_tests {
 
         // Setup api
         let state = web::Data::new(db);
-        let app = actix_web::test::init_service(App::new()
-            .app_data(state.clone())
-            .service(delete_request)).await;
+        let app = actix_web::test::init_service(
+            App::new().app_data(state.clone()).service(delete_request),
+        )
+        .await;
 
-        let req = actix_web::test::TestRequest::delete().uri("/123").to_request();
+        let req = actix_web::test::TestRequest::delete()
+            .uri("/123")
+            .to_request();
 
         let resp = actix_web::test::call_service(&app, req).await;
-        
+
         assert!(resp.status().is_success());
     }
 }

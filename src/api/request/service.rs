@@ -59,8 +59,8 @@ pub async fn delete_request(
 
 #[cfg(test)]
 mod service_tests {
-    use sea_orm::MockExecResult;
     use super::*;
+    use sea_orm::MockExecResult;
 
     use sea_orm::{DatabaseBackend, MockDatabase};
 
@@ -91,16 +91,18 @@ mod service_tests {
             .into_connection()
     }
 
-
     #[tokio::test]
     pub async fn test_add_request() -> Result<(), ServerError> {
         // Create MockDatabase
         let db = setup_db();
 
         // Call service
-        let request_dto = RequestDto { id: 123, value: 123 };
+        let request_dto = RequestDto {
+            id: 123,
+            value: 123,
+        };
         let resp = add_request(&db, request_dto).await?;
-        
+
         assert_eq!(
             resp,
             RequestModel {
@@ -119,7 +121,7 @@ mod service_tests {
 
         // Call service
         let resp = get_request(&db, 123).await?;
-        
+
         assert_eq!(
             resp,
             RequestModel {
@@ -131,16 +133,18 @@ mod service_tests {
         Ok(())
     }
 
-
     #[tokio::test]
     async fn test_update_request() -> Result<(), ServerError> {
         // Create MockDatabase
         let db = setup_db();
 
         // Call service
-        let request_dto = RequestDto { id: 321, value: 111 };
+        let request_dto = RequestDto {
+            id: 321,
+            value: 111,
+        };
         let resp = update_request(&db, request_dto).await?;
-        
+
         assert_eq!(
             resp,
             RequestModel {
@@ -159,11 +163,8 @@ mod service_tests {
 
         // Call service
         let resp = delete_request(&db, 321).await?;
-        
-        assert_eq!(
-            resp.rows_affected,
-            1
-        );
+
+        assert_eq!(resp.rows_affected, 1);
 
         Ok(())
     }

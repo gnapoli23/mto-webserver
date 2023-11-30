@@ -21,7 +21,11 @@ pub struct HttpBinResponse {
     data: String,
 }
 
-pub async fn send_request(client: &Client, req: &HttpBinPayload, conn: &DatabaseConnection) -> Option<u8> {
+pub async fn send_request(
+    client: &Client,
+    req: &HttpBinPayload,
+    conn: &DatabaseConnection,
+) -> Option<u8> {
     let fut = client.post("https://httpbin.org/post").json(req).send();
     match fut.await {
         Ok(res) => match res.json::<HttpBinResponse>().await {
