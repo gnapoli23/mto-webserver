@@ -85,7 +85,7 @@ pub async fn send_request(
             None
         }
     };
-    
+
     // Save request on DB
     let request = RequestActiveModel {
         value: Set(req.value.into()),

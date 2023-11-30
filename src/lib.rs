@@ -8,17 +8,28 @@ use actix_web::{web, App, HttpServer};
 use dotenv::dotenv;
 use env_logger::Env;
 use log::info;
+use migration::{Migrator, MigratorTrait};
 
 pub async fn main() -> std::io::Result<()> {
     // Load .env file and init configuration
     dotenv().ok();
-    let config = config::get().await.unwrap();
+    let config = config::get()
+        .await
+        .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?;
 
     // Init logger
     env_logger::init_from_env(Env::default().default_filter_or("info"));
 
     // Init DB
-    let conn = db::connect(config).await.unwrap(); // TODO: handle error
+    let conn = db::connect(config)
+        .await
+        .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?;
+    // Exec migrations
+    Migrator::up(&conn, None)
+        .await
+        .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?;
+
+    // Create state
     let state = web::Data::new(conn);
 
     // Init server

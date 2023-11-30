@@ -8,7 +8,8 @@ pub async fn connect(conf: &Config) -> Result<DatabaseConnection, DbErr> {
     conn_opts
         .min_connections(conf.database_min_conns)
         .max_connections(conf.database_max_conns)
-        .connect_timeout(Duration::from_secs(conf.database_conn_timeout));
+        .connect_timeout(Duration::from_secs(conf.database_conn_timeout))
+        .sqlx_logging(false);
 
     // Under the hood, a sqlx::Pool is created and owned by DatabaseConnection
     Database::connect(conn_opts).await

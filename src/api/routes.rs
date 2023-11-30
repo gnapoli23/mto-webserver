@@ -1,7 +1,10 @@
 use std::error::Error;
 
 use crate::{
-    api::{request::{self, HttpBinPayload}, ApiResponse},
+    api::{
+        request::{self, HttpBinPayload},
+        ApiResponse,
+    },
     utils::find_mto_numbers,
 };
 use actix_web::{get, web, HttpResponse};

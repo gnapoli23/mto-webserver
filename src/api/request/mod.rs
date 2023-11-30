@@ -4,7 +4,7 @@ mod service;
 pub use service::send_request;
 
 use actix_web::web;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 pub fn config(cfg: &mut web::ServiceConfig) {
     cfg.service(controller::add_request)
@@ -12,7 +12,6 @@ pub fn config(cfg: &mut web::ServiceConfig) {
         .service(controller::update_request)
         .service(controller::delete_request);
 }
-
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct HttpBinPayload {

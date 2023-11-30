@@ -1,6 +1,10 @@
 version : '3'
 services:
-  mysql:
+  server:
+    build: .
+    ports:
+      - "8080:8080"
+  db:
     image: mysql
     command: --default-authentication-plugin=mysql_native_password
     environment:
