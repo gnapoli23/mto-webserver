@@ -1,9 +1,9 @@
-use serde::Serialize;
+use serde::{Serialize, Deserialize};
 
 pub mod request;
 pub mod routes;
 
-#[derive(Serialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ApiResponse<T: Serialize> {
     #[serde(skip_serializing_if = "Option::is_none")]
     data: Option<T>,
