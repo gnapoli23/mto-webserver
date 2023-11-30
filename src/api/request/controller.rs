@@ -1,16 +1,20 @@
-use actix_web::{delete, get, post, put, web, Error, HttpResponse};
-use mto_service::crud;
+use actix_web::{delete, get, post, put, web, HttpResponse, Error};
 use sea_orm::DatabaseConnection;
 
-use crate::error::ServerError;
+use crate::api::{
+        request::{dto::RequestDto, service},
+        ApiResponse,
+    };
 
 #[post("/")]
 pub async fn add_request(
     db: web::Data<DatabaseConnection>,
-    data: web::Json<serde_json::Value>,
+    data: web::Json<RequestDto>,
 ) -> Result<HttpResponse, Error> {
-    let data = crud::request::add_request(&db).await.unwrap();
-    Ok(HttpResponse::Ok().json(&data))
+    let data = service::add_request(&db, data.0)
+        .await?;
+    let resp = ApiResponse::new(data);
+    Ok(HttpResponse::Ok().json(&resp))
 }
 
 #[get("/{id}")]
@@ -18,17 +22,20 @@ pub async fn get_request(
     db: web::Data<DatabaseConnection>,
     id: web::Path<i32>,
 ) -> Result<HttpResponse, Error> {
-    if let Some(data) = crud::request::get_request(&db, *id).await.unwrap() {
-        Ok(HttpResponse::Ok().json(&data))
-    } else {
-        Ok(HttpResponse::Ok().json(format!("Request with id {id} does not exist.")))
-    }
+    let data = service::get_request(&db, *id)
+        .await?;
+    let resp = ApiResponse::new(Some(data));
+    Ok(HttpResponse::Ok().json(&resp))
 }
 
 #[put("/{id}")]
-pub async fn update_request(db: web::Data<DatabaseConnection>) -> Result<HttpResponse, Error> {
-    let data = crud::request::update_request(&db).await.unwrap();
-    Ok(HttpResponse::Ok().json(&data))
+pub async fn update_request(
+    db: web::Data<DatabaseConnection>,
+    data: web::Json<RequestDto>,
+) -> Result<HttpResponse, Error> {
+    let data = service::update_request(&db, data.0).await?;
+    let resp = ApiResponse::new(data);
+    Ok(HttpResponse::Ok().json(&resp))
 }
 
 #[delete("/{id}")]
@@ -36,10 +43,6 @@ pub async fn delete_request(
     db: web::Data<DatabaseConnection>,
     id: web::Path<i32>,
 ) -> Result<HttpResponse, Error> {
-    let res = crud::request::delete_request(&db, *id).await.unwrap();
-    if res.rows_affected == 0 {
-        Ok(HttpResponse::Ok().json(format!("Request with id {id} does not exist. Nothing to delete.")))
-    } else {
-        Ok(HttpResponse::Ok().json(format!("Request with id {id} successfully deleted")))
-    }
+    let _ = service::delete_request(&db, *id).await?;
+    Ok(HttpResponse::Ok().finish())
 }
