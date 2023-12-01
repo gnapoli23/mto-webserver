@@ -48,8 +48,9 @@ The REST endpoints exposed are:
 ## Database design
 The database is `mto_db` and it is made up of two simple tables:
 
-```
- - **Request** 
+
+- **Request**
+``` 
 +-------+------+------+-----+---------+----------------+
 | Field | Type | Null | Key | Default | Extra          |
 +-------+------+------+-----+---------+----------------+
@@ -59,7 +60,7 @@ The database is `mto_db` and it is made up of two simple tables:
 ```
 
 
- - **User**
+- **User**
 ```
 +----------+--------------+------+-----+---------+----------------+
 | Field    | Type         | Null | Key | Default | Extra          |
