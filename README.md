@@ -82,5 +82,5 @@ To run the project simply run
 
 Once finished, Docker will create and start two containers:
 
- - `mto-server`: where the logic relies, exposed on port `8080`
+- `mto-server`: where the logic relies, exposed on port `8080`
 - `mto-db`: where the MySQL instance relies, exposed on default port `3306`
