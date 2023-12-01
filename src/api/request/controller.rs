@@ -1,17 +1,18 @@
 use actix_web::{delete, get, post, put, web, Error, HttpResponse};
+use mto_model::entity::prelude::*;
+use mto_service::crud::request;
 use sea_orm::DatabaseConnection;
 
-use crate::api::{
-    request::{dto::RequestDto, service},
-    ApiResponse,
-};
+use crate::{api::ApiResponse, error::ServerError};
 
 #[post("/")]
 pub async fn add_request(
     db: web::Data<DatabaseConnection>,
-    data: web::Json<RequestDto>,
+    data: web::Json<RequestModel>,
 ) -> Result<HttpResponse, Error> {
-    let data = service::add_request(&db, data.0).await?;
+    let data = request::add_request(&db, data.0)
+        .await
+        .map_err(ServerError::ServiceError)?;
     let resp = ApiResponse::new(data);
     Ok(HttpResponse::Ok().json(&resp))
 }
@@ -21,7 +22,9 @@ pub async fn get_request(
     db: web::Data<DatabaseConnection>,
     id: web::Path<i32>,
 ) -> Result<HttpResponse, Error> {
-    let data = service::get_request(&db, *id).await?;
+    let data = request::get_request(&db, *id)
+        .await
+        .map_err(ServerError::ServiceError)?;
     let resp = ApiResponse::new(Some(data));
     Ok(HttpResponse::Ok().json(&resp))
 }
@@ -29,9 +32,11 @@ pub async fn get_request(
 #[put("/{id}")]
 pub async fn update_request(
     db: web::Data<DatabaseConnection>,
-    data: web::Json<RequestDto>,
+    data: web::Json<RequestModel>,
 ) -> Result<HttpResponse, Error> {
-    let data = service::update_request(&db, data.0).await?;
+    let data = request::update_request(&db, data.0)
+        .await
+        .map_err(ServerError::ServiceError)?;
     let resp = ApiResponse::new(data);
     Ok(HttpResponse::Ok().json(&resp))
 }
@@ -41,21 +46,20 @@ pub async fn delete_request(
     db: web::Data<DatabaseConnection>,
     id: web::Path<i32>,
 ) -> Result<HttpResponse, Error> {
-    let _ = service::delete_request(&db, *id).await?;
+    let _ = request::delete_request(&db, *id)
+        .await
+        .map_err(ServerError::ServiceError)?;
     Ok(HttpResponse::Ok().finish())
 }
 
 #[cfg(test)]
 mod controller_tests {
     use actix_web::{web, App};
-    use mto_entity::prelude::*;
+    use mto_model::entity::prelude::*;
     use sea_orm::{DatabaseBackend, DatabaseConnection, MockDatabase, MockExecResult};
 
     use crate::api::{
-        request::{
-            controller::{add_request, delete_request, get_request, update_request},
-            dto::RequestDto,
-        },
+        request::controller::{add_request, delete_request, get_request, update_request},
         ApiResponse,
     };
 
@@ -95,7 +99,7 @@ mod controller_tests {
             actix_web::test::init_service(App::new().app_data(state.clone()).service(add_request))
                 .await;
 
-        let data = RequestDto {
+        let data = RequestModel {
             id: 123,
             value: 123,
         };
@@ -141,7 +145,7 @@ mod controller_tests {
         )
         .await;
 
-        let data = RequestDto {
+        let data = RequestModel {
             id: 321,
             value: 111,
         };

@@ -1,47 +1,43 @@
-use log::error;
-use mto_entity::prelude::*;
-use reqwest::Client;
+use mto_model::entity::prelude::*;
 use sea_orm::{ActiveModelTrait, ActiveValue::Set, DatabaseConnection, DeleteResult, EntityTrait};
 
-use crate::error::ServerError;
-
-use super::{dto::RequestDto, HttpBinPayload, HttpBinResponse};
+use crate::error::ServiceError;
 
 pub async fn add_request(
     conn: &DatabaseConnection,
-    data: RequestDto,
-) -> Result<RequestModel, ServerError> {
+    data: RequestModel,
+) -> Result<RequestModel, ServiceError> {
     // Add request
     let new_request = RequestActiveModel {
         id: Set(data.id),
         value: Set(data.value),
     };
-    new_request.insert(conn).await.map_err(ServerError::DbError)
+    new_request.insert(conn).await.map_err(ServiceError::Crud)
 }
 
-pub async fn get_request(conn: &DatabaseConnection, id: i32) -> Result<RequestModel, ServerError> {
+pub async fn get_request(conn: &DatabaseConnection, id: i32) -> Result<RequestModel, ServiceError> {
     // Find request
     Request::find_by_id(id)
         .one(conn)
         .await
-        .map_err(ServerError::DbError)?
-        .ok_or(ServerError::NotFound)
+        .map_err(ServiceError::Crud)?
+        .ok_or(ServiceError::DataNotFound)
 }
 
 pub async fn update_request(
     conn: &DatabaseConnection,
-    data: RequestDto,
-) -> Result<RequestModel, ServerError> {
+    data: RequestModel,
+) -> Result<RequestModel, ServiceError> {
     let mut request: RequestActiveModel = Request::find_by_id(data.id)
         .one(conn)
         .await
-        .map_err(ServerError::DbError)?
-        .ok_or(ServerError::NotFound)
+        .map_err(ServiceError::Crud)?
+        .ok_or(ServiceError::DataNotFound)
         .map(Into::into)?;
     request.id = Set(data.id);
     request.value = Set(data.value);
 
-    let data = request.update(conn).await?;
+    let data = request.update(conn).await.map_err(ServiceError::Crud)?;
 
     Ok(data)
 }
@@ -49,63 +45,24 @@ pub async fn update_request(
 pub async fn delete_request(
     conn: &DatabaseConnection,
     id: i32,
-) -> Result<DeleteResult, ServerError> {
+) -> Result<DeleteResult, ServiceError> {
     let request: RequestActiveModel = Request::find_by_id(id)
         .one(conn)
         .await
-        .map_err(ServerError::DbError)?
-        .ok_or(ServerError::NotFound)
+        .map_err(ServiceError::Crud)?
+        .ok_or(ServiceError::DataNotFound)
         .map(Into::into)?;
-    request.delete(conn).await.map_err(ServerError::DbError)
-}
-
-pub async fn send_request(
-    client: &Client,
-    req: &HttpBinPayload,
-    conn: &DatabaseConnection,
-) -> Option<u8> {
-    let fut = client.post("https://httpbin.org/post").json(req).send();
-    let resp = match fut.await {
-        Ok(res) => match res.json::<HttpBinResponse>().await {
-            Ok(json_res) => {
-                if let Ok(data) = serde_json::from_str::<HttpBinPayload>(&json_res.data) {
-                    Some(data.value)
-                } else {
-                    error!("Unable to deserialize response");
-                    None
-                }
-            }
-            Err(e) => {
-                error!("Unable to deserialize response into JSON: {e}");
-                None
-            }
-        },
-        Err(e) => {
-            error!("Unable to send request: {e}");
-            None
-        }
-    };
-
-    // Save request on DB
-    let request = RequestActiveModel {
-        value: Set(req.value.into()),
-        ..Default::default()
-    };
-    if let Err(e) = request.insert(conn).await {
-        error!("Unable to save data into database: {e}");
-    }
-
-    resp
+    request.delete(conn).await.map_err(ServiceError::Crud)
 }
 
 #[cfg(test)]
-mod service_tests {
+mod crud_tests {
     use super::*;
+    use mto_model::httpbin::{HttpBinRequest, HttpBinResponse};
+    use reqwest::Client;
     use sea_orm::MockExecResult;
 
     use sea_orm::{DatabaseBackend, MockDatabase};
-
-    use crate::api::request::dto::RequestDto;
 
     fn setup_db() -> DatabaseConnection {
         MockDatabase::new(DatabaseBackend::MySql)
@@ -133,12 +90,12 @@ mod service_tests {
     }
 
     #[tokio::test]
-    pub async fn test_add_request() -> Result<(), ServerError> {
+    pub async fn test_add_request() -> Result<(), ServiceError> {
         // Create MockDatabase
         let db = setup_db();
 
         // Call service
-        let request_dto = RequestDto {
+        let request_dto = RequestModel {
             id: 123,
             value: 123,
         };
@@ -156,7 +113,7 @@ mod service_tests {
     }
 
     #[tokio::test]
-    async fn test_get_request() -> Result<(), ServerError> {
+    async fn test_get_request() -> Result<(), ServiceError> {
         // Create MockDatabase
         let db = setup_db();
 
@@ -175,12 +132,12 @@ mod service_tests {
     }
 
     #[tokio::test]
-    async fn test_update_request() -> Result<(), ServerError> {
+    async fn test_update_request() -> Result<(), ServiceError> {
         // Create MockDatabase
         let db = setup_db();
 
         // Call service
-        let request_dto = RequestDto {
+        let request_dto = RequestModel {
             id: 321,
             value: 111,
         };
@@ -198,7 +155,7 @@ mod service_tests {
     }
 
     #[tokio::test]
-    async fn test_delete_request() -> Result<(), ServerError> {
+    async fn test_delete_request() -> Result<(), ServiceError> {
         // Create MockDatabase
         let db = setup_db();
 
@@ -214,7 +171,7 @@ mod service_tests {
     async fn test_serde() {
         // Send a simple request and deserialize the `data` field from the response
         let client = Client::new();
-        let req = HttpBinPayload::new(1);
+        let req = HttpBinRequest::new(1);
         let res = client
             .post("https://httpbin.org/post")
             .json(&req)
@@ -223,7 +180,7 @@ mod service_tests {
             .unwrap()
             .json::<HttpBinResponse>()
             .await
-            .map(|resp| serde_json::from_str::<HttpBinPayload>(&resp.data))
+            .map(|resp| serde_json::from_str::<HttpBinRequest>(&resp.data))
             .unwrap()
             .unwrap();
         assert_eq!(res.value, 1)

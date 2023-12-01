@@ -1,8 +1,10 @@
-use std::{error::Error, collections::HashMap};
+use mto_model::httpbin::HttpBinRequest;
+use mto_service::send_httpbin_request;
+use std::{collections::HashMap, error::Error};
 
 use crate::{
     api::{
-        request::{self, HttpBinPayload},
+        request::{self},
         ApiResponse,
     },
     utils::find_mto_numbers,
@@ -25,14 +27,14 @@ async fn run(conn: web::Data<DatabaseConnection>) -> Result<HttpResponse, Box<dy
     let value_requests = rand::thread_rng()
         .sample_iter(&range)
         .take(30)
-        .map(HttpBinPayload::new)
-        .collect::<Vec<HttpBinPayload>>();
+        .map(HttpBinRequest::new)
+        .collect::<Vec<HttpBinRequest>>();
 
     // Create a future for each value, to run the requests concurrently
     let client = reqwest::Client::new();
     let futs = value_requests
         .iter()
-        .map(|req| request::send_request(&client, req, &conn))
+        .map(|req| send_httpbin_request(&client, req, &conn))
         .collect::<FuturesUnordered<_>>();
 
     let res: Vec<u8> = futs
@@ -45,7 +47,10 @@ async fn run(conn: web::Data<DatabaseConnection>) -> Result<HttpResponse, Box<dy
     // Find values that appear more than once
     let mto = find_mto_numbers(res);
     let mut res_data: HashMap<String, Vec<u8>> = HashMap::new();
-    res_data.insert("sent_values".into(), value_requests.into_iter().map(|v| v.value).collect());
+    res_data.insert(
+        "sent_values".into(),
+        value_requests.into_iter().map(|v| v.value).collect(),
+    );
     res_data.insert("mto_values".into(), mto);
     let res = ApiResponse::new(Some(res_data));
 

@@ -4,12 +4,13 @@ version = "0.1.0"
 edition = "2021"
 
 [workspace]
-members = [".", "migration", "entity"]
+members = [".", "migration", "service", "model"]
 
 
 [dependencies]
 mto-migration = { path = "./migration" }
-mto-entity = { path = "./entity"}
+mto-model = { path = "./model"}
+mto-service = { path = "./service" }
 tokio = { version = "1.34.0", features = ["sync", "rt-multi-thread", "macros"]}
 actix-web = "4.4.0"
 sea-orm = { version = "0.12.7", features = [ "sqlx-mysql", "runtime-tokio-native-tls", "mock"] }
