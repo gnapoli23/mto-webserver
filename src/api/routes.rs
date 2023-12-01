@@ -1,4 +1,4 @@
-use std::error::Error;
+use std::{error::Error, collections::HashMap};
 
 use crate::{
     api::{
@@ -44,7 +44,10 @@ async fn run(conn: web::Data<DatabaseConnection>) -> Result<HttpResponse, Box<dy
 
     // Find values that appear more than once
     let mto = find_mto_numbers(res);
-    let res = ApiResponse::new(Some(mto));
+    let mut res_data: HashMap<String, Vec<u8>> = HashMap::new();
+    res_data.insert("sent_values".into(), value_requests.into_iter().map(|v| v.value).collect());
+    res_data.insert("mto_values".into(), mto);
+    let res = ApiResponse::new(Some(res_data));
 
     Ok(HttpResponse::Ok().json(res))
 }
