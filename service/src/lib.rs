@@ -6,6 +6,7 @@ use mto_model::{
 use reqwest::Client;
 use sea_orm::{ActiveModelTrait, DatabaseConnection, Set};
 
+pub mod auth;
 pub mod crud;
 pub mod error;
 

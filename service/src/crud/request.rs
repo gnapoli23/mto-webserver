@@ -21,7 +21,7 @@ pub async fn get_request(conn: &DatabaseConnection, id: i32) -> Result<RequestMo
         .one(conn)
         .await
         .map_err(ServiceError::Crud)?
-        .ok_or(ServiceError::DataNotFound)
+        .ok_or(ServiceError::NotFound)
 }
 
 pub async fn update_request(
@@ -32,7 +32,7 @@ pub async fn update_request(
         .one(conn)
         .await
         .map_err(ServiceError::Crud)?
-        .ok_or(ServiceError::DataNotFound)
+        .ok_or(ServiceError::NotFound)
         .map(Into::into)?;
     request.id = Set(data.id);
     request.value = Set(data.value);
@@ -50,7 +50,7 @@ pub async fn delete_request(
         .one(conn)
         .await
         .map_err(ServiceError::Crud)?
-        .ok_or(ServiceError::DataNotFound)
+        .ok_or(ServiceError::NotFound)
         .map(Into::into)?;
     request.delete(conn).await.map_err(ServiceError::Crud)
 }

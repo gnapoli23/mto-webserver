@@ -15,8 +15,14 @@ use rand::{distributions::Uniform, Rng};
 use sea_orm::DatabaseConnection;
 
 pub fn config(cfg: &mut web::ServiceConfig) {
-    cfg.service(web::scope("/request").configure(request::config))
-        .service(run);
+    let auth_middleware =
+        mto_service::auth::HttpAuthentication::basic(mto_service::auth::basic::basic_auth);
+    cfg.service(
+        web::scope("/request")
+            .configure(request::config)
+            .wrap(auth_middleware),
+    )
+    .service(run);
 }
 
 #[get("/run")]

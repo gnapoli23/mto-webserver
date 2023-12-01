@@ -34,6 +34,7 @@ pub async fn main() -> std::io::Result<()> {
 
     // Init server
     let server = HttpServer::new(move || {
+        // Create auth middleware
         App::new()
             .app_data(state.clone())
             .configure(api::routes::config)

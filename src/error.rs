@@ -1,5 +1,4 @@
-use actix_web::{HttpResponse, ResponseError};
-use log::error;
+use actix_web::ResponseError;
 use mto_service::error::ServiceError;
 
 #[derive(Debug)]
@@ -20,20 +19,7 @@ impl std::error::Error for ServerError {}
 impl ResponseError for ServerError {
     fn error_response(&self) -> actix_web::HttpResponse<actix_web::body::BoxBody> {
         match &self {
-            // Self::WrongCredentials => {
-            //     error!("Username and password are incorrect!");
-            //     HttpResponse::Unauthorized().finish()
-            // }
-            ServerError::ServiceError(e) => match e {
-                ServiceError::Crud(e) => {
-                    error!("Database error: {e}");
-                    HttpResponse::InternalServerError().finish()
-                }
-                ServiceError::DataNotFound => {
-                    error!("Data not found!");
-                    HttpResponse::NotFound().finish()
-                }
-            },
+            ServerError::ServiceError(e) => e.error_response(),
         }
     }
 }
