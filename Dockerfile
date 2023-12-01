@@ -17,10 +17,13 @@ FROM debian:buster-slim
 WORKDIR /usr/local/bin
 
 # Install dependecies
-RUN apt-get update && apt install -y openssl
+RUN apt-get update && apt-get install -y libssl1.1 ca-certificates && rm -rf /var/lib/apt/lists/*
 
 # Copy the built binary from the builder stage
 COPY --from=builder /usr/local/bin/target/release/mto-webserver .
+
+# Change binary permissions
+RUN chmod +x /usr/local/bin/mto-webserver
 
 # Expose the port your application will run on
 EXPOSE 8080
